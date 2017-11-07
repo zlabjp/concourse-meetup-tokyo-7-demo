@@ -1,0 +1,33 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  labels:
+    app: myapp
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: zlabjp/myapp:v1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          timeoutSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          timeoutSeconds: 20
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sh", "-c", "sleep 1; nginx -s quit; sleep 3"]

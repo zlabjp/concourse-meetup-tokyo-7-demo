@@ -1,0 +1,69 @@
+resource_types:
+- name: kubernetes
+  type: docker-image
+  source:
+    repository: zlabjp/kubernetes-resource
+    tag: "1.8"
+
+resources:
+- name: repo
+  type: git
+  source:
+    uri: git@github.com:zlabjp/concourse-meetup-tokyo-7-demo.git
+    branch: master
+    paths: [deploy/*]
+
+- name: stage
+  type: kubernetes
+  source:
+    kubeconfig: ((stage-kubeconfig))
+
+- name: prod
+  type: kubernetes
+  source:
+    kubeconfig: ((prod-kubeconfig))
+
+jobs:
+- name: stage-deploy
+  serial: true
+  plan:
+  - get: repo
+    trigger: true
+  - put: stage
+    params:
+      kubectl: apply -f repo/deploy -f repo/deploy/stage
+      wait_until_ready_selector: app=myapp
+
+- name: stage-e2e
+  serial: true
+  plan:
+  - get: repo
+    trigger: true
+    passed: [stage-deploy]
+  - task: e2e
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: ubuntu
+          tag: "16.04"
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          apt-get update -yqq
+          apt-get install curl -yqq
+          curl --fail -H "Host: stage-myapp.example.local" 182.22.30.96
+
+- name: prod-deploy
+  serial: true
+  plan:
+  - get: repo
+    trigger: true
+    passed: [stage-e2e]
+  - put: prod
+    params:
+      kubectl: apply -f repo/deploy -f repo/deploy/prod
+      wait_until_ready_selector: app=myapp
