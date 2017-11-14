@@ -9,7 +9,7 @@ resources:
 - name: repo
   type: git
   source:
-    uri: git@github.com:zlabjp/concourse-meetup-tokyo-7-demo.git
+    uri: git://github.com/zlabjp/concourse-meetup-tokyo-7-demo.git
     branch: master
     paths: [deploy/*]
 
