@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: myapp
-        image: zlabjp/myapp:v2
+        image: zlabjp/myapp:v1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
